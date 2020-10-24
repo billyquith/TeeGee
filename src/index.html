@@ -20,6 +20,11 @@
 		}
 		.tgcheckbox {}
 		.tgoptions label { padding-bottom: 0.5em; }
+		.tgcopy {
+			display: inline;
+			font-size: smaller;
+			float: right;
+		}
 	</style>
 </head>
 <body>
@@ -27,6 +32,12 @@
 <script>
 $(document).ready(function() {
 	'use strict';
+
+	function copyToClipboard(text) {
+	    let buff = $("#tgcopybuff");
+	    buff.val(text).select();
+	    document.execCommand("copy");
+	}
 
 	class State {
 		constructor() {
@@ -71,9 +82,17 @@ $(document).ready(function() {
 		}
 
 		create_pre(name, txt) {
-			let elem = $(`<pre class="tgitem tgpre" id="${name}">${txt}</pre>`).appendTo(this.eRoot)
+			let elem = $('<div class="tgitem">').appendTo(this.eRoot)
+			elem.append(`<pre class="tgpre" id="${name}">${txt}</pre>`)
+			// add copy to clipboard button
+			elem.append(`<button class="tgcopy" id="copy_${name}">Copy</button>`)
+			let st = this.state
+			$(`#copy_${name}`).button().click(function(evt){
+				evt.preventDefault()
+				copyToClipboard(st.get(name))
+			})
 			// change text on State change
-			this.state.watch(name, (state) => elem.text(state.get(name)))
+			this.state.watch(name, (state) => $(`#${name}`).text(state.get(name)))
 		}
 
 		create_checkbox(name, label, value) {
@@ -154,7 +173,7 @@ $(document).ready(function() {
 	let targ = gen.add_text_choice('target', "Choose target:", targets)
 	gen.add_boolean('btest', "Include tests", false)
 	gen.add_boolean('bsample', "Include sample", true)
-	let cmdline = gen.add_command_line('cl', "cmake")
+	gen.add_command_line('cl', "cmake")
 
 	gen.on_update(function(state) {
 		let comp = state.get('compiler')
@@ -170,6 +189,8 @@ $(document).ready(function() {
 			<div id="tg_root"></div>
 		</fieldset>
 	</form>
+
+	<input style="visibility: hidden" id="tgcopybuff"></input>
 
 </body>
 </html>
