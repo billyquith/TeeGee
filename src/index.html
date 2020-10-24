@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>TeeGee Text Generator</title>
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/overcast/jquery-ui.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+	<style>
+		#tg_root {
+			font-family: Arial, Helvetica, sans-serif;
+			display: block;
+		}
+		label, input { display: block; }
+		.tgitem { padding: 0.7em; }
+		.tgtext {}
+		.tgpre {
+			background-color: #eee;
+		    padding: 1em;
+		}
+		.tgcheckbox {}
+		.tgoptions label { padding-bottom: 0.5em; }
+	</style>
+</head>
+<body>
+
+<script>
+$(document).ready(function() {
+	'use strict';
+
+	class State {
+		constructor() {
+			this.values = {}
+			this.watches = {}
+			this._updating = false
+		}
+
+		declare(key, value) {
+			this.values[key] = value
+			this.watches[key] = []
+		}
+
+		set(key, value) {
+			this.values[key] = value
+			// notify
+			this.watches[key].forEach(cb => cb(this))
+			if (!this._updating) {
+				this._updating = true
+				this.watches["_update"].forEach(cb => cb(this))				
+				this._updating = false
+			}
+		}
+
+		get(key) {
+			return this.values[key]
+		}
+
+		watch(key, cb) {
+			this.watches[key].push(cb)
+		}
+	}
+
+	class UI {
+		constructor(state) {
+			this.state = state
+			this.eRoot = $("#tg_root")
+		}
+
+		create_text(txt) {
+			this.eRoot.append(`<p class="tgitem tgtext">${txt}</p>`)
+		}
+
+		create_pre(name, txt) {
+			let elem = $(`<pre class="tgitem tgpre" id="${name}">${txt}</pre>`).appendTo(this.eRoot)
+			// change text on State change
+			this.state.watch(name, (state) => elem.text(state.get(name)))
+		}
+
+		create_checkbox(name, label, value) {
+			let elem = $('<div class="tgitem tgcheckbox">').appendTo(this.eRoot)
+			elem.append(`<label for="${name}">${label}</label>`)
+			elem.append(`<input type="checkbox" name="${name}" id="${name}">`)
+			let st = this.state
+			$(`#${name}`).checkboxradio().change(function(){
+				st.set(name, this.checked)
+			})
+		}
+
+		create_options(name, label, opts) {
+			let elem = $('<div class="tgitem tgoptions">').appendTo(this.eRoot)
+			elem.append(`<label for="${name}">${label}</label>`)
+			elem.append(`<select name="${name}" id="${name}">`)
+			let sel = $(`#${name}`)
+			opts.forEach(o => {
+				sel.append(`<option>${o.label}</option>`)
+			})
+			let st = this.state
+			sel.selectmenu({ change: function(evt, ui) {
+				let idx = ui.item.index
+				let opt = opts[idx]
+				st.set(name, opt.user)
+			}})
+		}
+	}
+
+	//---------------------------------------------------------
+
+	class Gen {
+		constructor() {
+			this.state = new State()
+			this.ui = new UI(this.state)
+			this.state.declare("_update", "")
+		}
+
+		add_boolean(name, label, value) {
+			this.state.declare(name, value)
+			this.ui.create_checkbox(name, label, value)
+		}
+
+		add_text_choice(name, label, opts) {
+			this.state.declare(name, opts[0].user)
+			this.ui.create_options(name, label, opts)
+		}
+
+		add_command_line(name, text) {
+			this.state.declare(name, text)
+			this.ui.create_pre(name, text)
+		}
+
+		on_update(cb) {
+			this.state.watch("_update", cb)
+		}
+	}
+
+	class Option {
+		constructor(label, user) {
+			this.label = label
+			this.user = user
+		}
+	}
+
+
+	let compilers = [
+		new Option("Makefiles", "Unix Makefiles"),
+		new Option("XCode", "XCode")
+		]
+	let targets = [
+		new Option("Allegro 5", "ALLEGRO5"),
+		new Option("DirectX 11", "DIRECTX11")
+		]
+
+	let gen = new Gen({})
+	gen.add_text_choice('compiler', "Choose compiler:", compilers)
+	let targ = gen.add_text_choice('target', "Choose target:", targets)
+	gen.add_boolean('btest', "Include tests", false)
+	gen.add_boolean('bsample', "Include sample", true)
+	let cmdline = gen.add_command_line('cl', "cmake")
+
+	gen.on_update(function(state) {
+		let comp = state.get('compiler')
+		let targ = state.get('target')
+		state.set('cl', `cmake -G"${comp}" -DRENDER_${targ}=ON`)
+	})
+
+});
+</script>
+
+	<form action="#">
+		<fieldset>
+			<div id="tg_root"></div>
+		</fieldset>
+	</form>
+
+</body>
+</html>
