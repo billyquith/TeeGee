@@ -1,13 +1,10 @@
 'use strict';
 
-function copy_to_clipboard(text) {
-    let buff = $("#tg-copybuff");
-    buff.val(text).select();
+function tg_copy_to_clipboard(text) {
+	let temp = $('<input>').appendTo('body')
+    temp.val(text).select();
     document.execCommand("copy");
-}
-
-Array.prototype.last = function() {
-    return this[this.length - 1];
+    temp.remove()
 }
 
 class State {
@@ -51,7 +48,7 @@ class UI {
 	}
 
 	_get_cursor() {
-		return this.cursor.last()
+		return this.cursor[this.cursor.length - 1]
 	}
 
 	create_text(txt) {
@@ -66,7 +63,7 @@ class UI {
 		let st = this.state
 		$(`#copy_${name}`).button().click(function(evt){
 			evt.preventDefault()
-			copy_to_clipboard(st.get(name))
+			tg_copy_to_clipboard(st.get(name))
 		})
 		// change text on State change
 		this.state.watch(name, (state) => $(`#${name}`).text(state.get(name)))
@@ -217,7 +214,6 @@ function _tg_process(gen, elem) {
 
 function tg_init(desc) {
 	// create elements for clipboard buffer and form
-	desc.parent().append('<input style="visibility: hidden" id="tg-copybuff"></input>')
 	let root = $('<form action="#"" class="tgw-panel">').appendTo(desc.parent())		
 	let gen = new Gen()
 	gen.ui.cursor.push(root)
