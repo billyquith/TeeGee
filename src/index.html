@@ -44,7 +44,7 @@
 $(document).ready(function() {
 	'use strict';
 
-	function copyToClipboard(text) {
+	function copy_to_clipboard(text) {
 	    let buff = $("#tg-copybuff");
 	    buff.val(text).select();
 	    document.execCommand("copy");
@@ -110,7 +110,7 @@ $(document).ready(function() {
 			let st = this.state
 			$(`#copy_${name}`).button().click(function(evt){
 				evt.preventDefault()
-				copyToClipboard(st.get(name))
+				copy_to_clipboard(st.get(name))
 			})
 			// change text on State change
 			this.state.watch(name, (state) => $(`#${name}`).text(state.get(name)))
@@ -157,8 +157,6 @@ $(document).ready(function() {
 			this.cursor.push(elem)
 		}
 	}
-
-	//---------------------------------------------------------
 
 	class Gen {
 		constructor() {
@@ -209,8 +207,6 @@ $(document).ready(function() {
 
 	var _tg_class_conv = {
 		tgpanel: function(gen, elem) {
-			gen.begin_group_box(elem.attr('label'))
-			//return _ => gen.end_group()
 		},
 
 		tggroup: function(gen, elem) {
@@ -241,7 +237,8 @@ $(document).ready(function() {
 		}
 	}
 
-	function tg_process(gen, elem) {
+	// Recursively convery options into Generator, State, & GUI.
+	function _tg_process(gen, elem) {
 		let cls = elem.attr('class')
 		let closer
 		if (cls && cls.startsWith('tg')) {
@@ -252,12 +249,15 @@ $(document).ready(function() {
 		}
 
 		let ch = elem.children('div').each(function (idx, ch){
-			tg_process(gen, $(ch))			
+			_tg_process(gen, $(ch))			
 		})
 
 		if (closer)
 			closer()
 	}
+
+	//---------------------------------------------------------
+	// Public
 
 	function tg_init(desc) {
 		// create elements for clipboard buffer and form
@@ -265,9 +265,12 @@ $(document).ready(function() {
 		let root = $('<form action="#"" class="tgw-panel">').appendTo(desc.parent())		
 		let gen = new Gen()
 		gen.ui.cursor.push(root)
-		tg_process(gen, desc)
+		_tg_process(gen, desc)
 		return gen
 	}
+
+	//---------------------------------------------------------
+	// Test
 
 	tg_init($('#cmakeopts')).on_update(function(state) {
 		let comp = state.get('compiler')
@@ -280,10 +283,6 @@ $(document).ready(function() {
 
 });
 </script>
-
-	<!--form action="#">
-		<div id="tg_root"></div>
-	</form -->
 
 	<div class="tgpanel" id="cmakeopts">
 		<div class="tggroup" label="Cmake options">
