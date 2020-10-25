@@ -3,27 +3,38 @@
 <head>
 	<meta charset="utf-8">
 	<title>TeeGee Text Generator</title>
-	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/overcast/jquery-ui.css">
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css">
+	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 	<style>
-		#tg_root {
-			font-family: Arial, Helvetica, sans-serif;
-			display: block;
+		.ui-widget {
+			font-family: 'Roboto', sans-serif;
 		}
 		label, input { display: block; }
-		.tgitem { padding: 0.7em; }
-		.tgtext {}
-		.tgpre {
+		.tgpanel { visibility: hidden; }
+		.tgw-panel {
+			font-family: 'Roboto', sans-serif;
+			font-size: 0.9em;
+			padding: 0.7em;
+		}
+		.tgw-text {}
+		.tgw-pre {
 			background-color: #eee;
 		    padding: 1em;
 		}
-		.tgcheckbox {}
-		.tgoptions label { padding-bottom: 0.5em; }
-		.tgcopy {
+		.tgw-checkbox { padding: 1em 1em 0 0; }
+		.tgw-options { padding: 1em 1.5em 0 0; }
+		.tgw-options label { padding-bottom: 0.5em; }
+		.tgw-copy {
 			display: inline;
-			font-size: smaller;
 			float: right;
+			font-size: smaller;
+		}
+		.tgw-group {}
+		.tgw-row {
+			display: flex;
+			padding: 0 1em 1em 0;
 		}
 	</style>
 </head>
@@ -34,9 +45,13 @@ $(document).ready(function() {
 	'use strict';
 
 	function copyToClipboard(text) {
-	    let buff = $("#tgcopybuff");
+	    let buff = $("#tg-copybuff");
 	    buff.val(text).select();
 	    document.execCommand("copy");
+	}
+
+	Array.prototype.last = function() {
+	    return this[this.length - 1];
 	}
 
 	class State {
@@ -52,6 +67,8 @@ $(document).ready(function() {
 		}
 
 		set(key, value) {
+			if (this.values[key] === undefined)
+				throw `Unknown name accessed in State: ${key}`
 			this.values[key] = value
 			// notify
 			this.watches[key].forEach(cb => cb(this))
@@ -74,18 +91,22 @@ $(document).ready(function() {
 	class UI {
 		constructor(state) {
 			this.state = state
-			this.eRoot = $("#tg_root")
+			this.cursor = []
+		}
+
+		_get_cursor() {
+			return this.cursor.last()
 		}
 
 		create_text(txt) {
-			this.eRoot.append(`<p class="tgitem tgtext">${txt}</p>`)
+			this._get_cursor().append(`<p class="tgw-text">${txt}</p>`)
 		}
 
 		create_pre(name, txt) {
-			let elem = $('<div class="tgitem">').appendTo(this.eRoot)
-			elem.append(`<pre class="tgpre" id="${name}">${txt}</pre>`)
+			let elem = $('<div>').appendTo(this._get_cursor())
+			elem.append(`<pre class="tgw-pre" id="${name}">${txt}</pre>`)
 			// add copy to clipboard button
-			elem.append(`<button class="tgcopy" id="copy_${name}">Copy</button>`)
+			elem.append(`<button class="tgw-copy" id="copy_${name}">Copy</button>`)
 			let st = this.state
 			$(`#copy_${name}`).button().click(function(evt){
 				evt.preventDefault()
@@ -95,18 +116,20 @@ $(document).ready(function() {
 			this.state.watch(name, (state) => $(`#${name}`).text(state.get(name)))
 		}
 
-		create_checkbox(name, label, value) {
-			let elem = $('<div class="tgitem tgcheckbox">').appendTo(this.eRoot)
+		create_checkbox(name, label) {
+			let elem = $('<div class="tgw-checkbox">').appendTo(this._get_cursor())
 			elem.append(`<label for="${name}">${label}</label>`)
 			elem.append(`<input type="checkbox" name="${name}" id="${name}">`)
 			let st = this.state
-			$(`#${name}`).checkboxradio().change(function(){
+			let cbx = $(`#${name}`)
+			cbx.checkboxradio().change(function(){
 				st.set(name, this.checked)
 			})
+			cbx.prop("checked", this.state.get(name)).change() // set initial state
 		}
 
 		create_options(name, label, opts) {
-			let elem = $('<div class="tgitem tgoptions">').appendTo(this.eRoot)
+			let elem = $('<div class="tgw-options">').appendTo(this._get_cursor())
 			elem.append(`<label for="${name}">${label}</label>`)
 			elem.append(`<select name="${name}" id="${name}">`)
 			let sel = $(`#${name}`)
@@ -120,6 +143,19 @@ $(document).ready(function() {
 				st.set(name, opt.user)
 			}})
 		}
+
+		create_box(label) {
+			let elem = $('<fieldset class="tgw-group">').appendTo(this._get_cursor())
+			this.cursor.push(elem)
+			if (label) {
+				$("<legend>").text(label).appendTo(elem)
+			}
+		}
+
+		create_div() {
+			let elem = $('<div class="tgw-row">').appendTo(this._get_cursor())
+			this.cursor.push(elem)
+		}
 	}
 
 	//---------------------------------------------------------
@@ -127,8 +163,8 @@ $(document).ready(function() {
 	class Gen {
 		constructor() {
 			this.state = new State()
-			this.ui = new UI(this.state)
 			this.state.declare("_update", "")
+			this.ui = new UI(this.state)
 		}
 
 		add_boolean(name, label, value) {
@@ -146,8 +182,21 @@ $(document).ready(function() {
 			this.ui.create_pre(name, text)
 		}
 
+		begin_group_box(label) {
+			this.ui.create_box(label)			
+		}
+
+		begin_group_row() {
+			this.ui.create_div()			
+		}
+
+		end_group() {
+			this.ui.cursor.pop()
+		}
+
 		on_update(cb) {
 			this.state.watch("_update", cb)
+			cb(this.state)
 		}
 	}
 
@@ -158,39 +207,105 @@ $(document).ready(function() {
 		}
 	}
 
+	var _tg_class_conv = {
+		tgpanel: function(gen, elem) {
+			gen.begin_group_box(elem.attr('label'))
+			//return _ => gen.end_group()
+		},
 
-	let compilers = [
-		new Option("Makefiles", "Unix Makefiles"),
-		new Option("XCode", "XCode")
-		]
-	let targets = [
-		new Option("Allegro 5", "ALLEGRO5"),
-		new Option("DirectX 11", "DIRECTX11")
-		]
+		tggroup: function(gen, elem) {
+			gen.begin_group_box(elem.attr('label'))
+			return _ => gen.end_group()
+		},
 
-	let gen = new Gen({})
-	gen.add_text_choice('compiler', "Choose compiler:", compilers)
-	let targ = gen.add_text_choice('target', "Choose target:", targets)
-	gen.add_boolean('btest', "Include tests", false)
-	gen.add_boolean('bsample', "Include sample", true)
-	gen.add_command_line('cl', "cmake")
+		tgrow: function(gen, elem) {
+			gen.begin_group_row()
+			return _ => gen.end_group()
+		},
 
-	gen.on_update(function(state) {
+		tgchoice: function(gen, elem) {
+			let opts = []
+			elem.children('option').each(function (idx, ch) {
+				ch = $(ch)
+				opts.push(new Option(ch.text(), ch.attr('value') || ch.text()))
+			})
+			gen.add_text_choice(elem.attr('name'), elem.attr('label') || '', opts)
+		},
+
+		tgbool: function(gen, elem) {
+			gen.add_boolean(elem.attr('name'), elem.text(), elem.attr('value') == 'true')
+		},
+
+		tgcmdline: function(gen, elem) {
+			gen.add_command_line(elem.attr('name'), elem.text())
+		}
+	}
+
+	function tg_process(gen, elem) {
+		let cls = elem.attr('class')
+		let closer
+		if (cls && cls.startsWith('tg')) {
+			let pr = _tg_class_conv[cls]
+			if (!pr)
+				throw `Unrecognised tg class: ${cls}`;
+			closer = pr(gen, elem)
+		}
+
+		let ch = elem.children('div').each(function (idx, ch){
+			tg_process(gen, $(ch))			
+		})
+
+		if (closer)
+			closer()
+	}
+
+	function tg_init(desc) {
+		// create elements for clipboard buffer and form
+		desc.parent().append('<input style="visibility: hidden" id="tg-copybuff"></input>')
+		let root = $('<form action="#"" class="tgw-panel">').appendTo(desc.parent())		
+		let gen = new Gen()
+		gen.ui.cursor.push(root)
+		tg_process(gen, desc)
+		return gen
+	}
+
+	tg_init($('#cmakeopts')).on_update(function(state) {
 		let comp = state.get('compiler')
 		let targ = state.get('target')
-		state.set('cl', `cmake -G"${comp}" -DRENDER_${targ}=ON`)
+		let opts = ''
+		if (state.get('btest')) opts += ` -DWANT_TESTS=ON`
+		if (state.get('bsample')) opts += ` -DWANT_SAMPLE=ON`
+		state.set('cmakecl', `cmake -G"${comp}" -DRENDER_${targ}=ON${opts}`)
 	})
 
 });
 </script>
 
-	<form action="#">
-		<fieldset>
-			<div id="tg_root"></div>
-		</fieldset>
-	</form>
+	<!--form action="#">
+		<div id="tg_root"></div>
+	</form -->
 
-	<input style="visibility: hidden" id="tgcopybuff"></input>
+	<div class="tgpanel" id="cmakeopts">
+		<div class="tggroup" label="Cmake options">
+			<div class="tgrow">
+				<div class="tgchoice" name="compiler" label="Choose compiler:">
+					<option value="Unix Makefiles">Makefiles</option>
+					<option>Xcode</option>
+				</div>
+				<div class="tgchoice" name="target" label="Choose target:">
+					<option value="ALLEGRO5">Allegro 5</option>
+					<option value="DIRECTX11">DirectX 11</option>
+				</div>
+			</div>
+			<div class="tgrow">
+				<div class="tgbool" name="btest" value="false">Include tests</div>
+				<div class="tgbool" name="bsample" value="true">Include sample</div>
+			</div>
+		</div>
+		<div class="tgcmdline" name="cmakecl"></div>
+	</div>
+
+	
 
 </body>
 </html>
