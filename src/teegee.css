@@ -1,0 +1,31 @@
+
+.ui-widget {
+	font-family: 'Roboto', sans-serif;
+}
+label, input { display: block; }
+
+.tgpanel { visibility: hidden; }
+
+.tgw-panel {
+	font-family: 'Roboto', sans-serif;
+	font-size: 0.9em;
+	padding: 0.7em;
+}
+.tgw-text {}
+.tgw-pre {
+	background-color: #eee;
+    padding: 1em;
+}
+.tgw-checkbox { padding: 1em 1em 0 0; }
+.tgw-options { padding: 1em 1.5em 0 0; }
+.tgw-options label { padding-bottom: 0.5em; }
+.tgw-copy {
+	display: inline;
+	float: right;
+	font-size: smaller;
+}
+.tgw-group {}
+.tgw-row {
+	display: flex;
+	padding: 0 1em 1em 0;
+}
