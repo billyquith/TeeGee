@@ -97,6 +97,17 @@ class UI {
 		}})
 	}
 
+	create_tabs(tabs) {
+		let name = 'tabs'
+		let eTabs = $(`<div id="${name}">`).appendTo(this._get_cursor())
+		let eHdr = $('<ul>').appendTo(eTabs)
+		tabs.forEach(function(tab, idx){
+			$(`<li><a href="#${name}-${idx}">${tab.label}</a></li>`).appendTo(eHdr)
+			$(`<div id="${name}-${idx}"><pre><code>${tab.text}</code></pre></div>`).appendTo(eTabs)
+		})
+		$(`#${name}`).tabs()
+	}
+
 	create_box(label) {
 		let elem = $('<fieldset class="tgw-group">').appendTo(this._get_cursor())
 		this.cursor.push(elem)
@@ -131,6 +142,10 @@ class Gen {
 	add_command_line(name, text) {
 		this.state.declare(name, text)
 		this.ui.create_pre(name, text)
+	}
+
+	add_tabs(tabs) {
+		this.ui.create_tabs(tabs)
 	}
 
 	begin_group_box(label) {
@@ -187,7 +202,20 @@ var _tg_class_conv = {
 
 	tgcmdline: function(gen, elem) {
 		gen.add_command_line(elem.attr('name'), elem.text())
-	}
+	},
+
+	tgsnippets: function(gen, elem) {
+		let tabs = []
+		let snips = elem.find('div.tgsnippet').each(function(idx, snip){
+			snip = $(snip)
+			tabs.push({
+				label: snip.attr('label'),
+				text: snip.text()
+			})
+		})
+		gen.add_tabs(tabs)
+	},
+	tgsnippet: function(gen, elem) {}
 }
 
 // Recursively convery options into Generator, State, & GUI.
@@ -212,11 +240,14 @@ function _tg_process(gen, elem) {
 //---------------------------------------------------------
 // Public
 
-function tg_init(desc) {
+function tg_init(desc, output) {
+	if (output === undefined)
+		output = desc.parent()
 	// create elements for clipboard buffer and form
-	let root = $('<form action="#"" class="tgw-panel">').appendTo(desc.parent())		
+	let root = $('<form action="#"" class="tgw-panel">').appendTo(output)
 	let gen = new Gen()
 	gen.ui.cursor.push(root)
-	_tg_process(gen, desc)
+	_tg_process(gen, desc)	
+	$('pre code').each((i,b) => hljs.highlightBlock(b));
 	return gen
 }

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>TeeGee Text Generator</title>
+	<link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/styles/github.min.css" rel="stylesheet">
+	<link href="teegee.css" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/highlight.min.js"></script>
+	<script src="teegee.js"></script>
+</head>
+<body>
+
+<script>
+$(document).ready(function() {
+	'use strict';
+
+	// tg_init($('#test1')).on_update(function(state) {
+	// 	let comp = state.get('compiler')
+	// 	let targ = state.get('target')
+	// 	let opts = ''
+	// 	if (state.get('btest')) opts += ` -DWANT_TESTS=ON`
+	// 	if (state.get('bsample')) opts += ` -DWANT_SAMPLE=ON`
+	// 	state.set('cmakecl', `cmake -G"${comp}" -DRENDER_${targ}=ON${opts}`)
+	// })
+
+	tg_init($('#test2'))
+
+});
+</script>
+
+<!-- 	<div class="tgpanel" id="test1">
+		<div class="tggroup" label="Cmake options">
+			<div class="tgrow">
+				<div class="tgchoice" name="compiler" label="Choose compiler:">
+					<option value="Unix Makefiles">Makefiles</option>
+					<option>Xcode</option>
+				</div>
+				<div class="tgchoice" name="target" label="Choose target:">
+					<option value="ALLEGRO5">Allegro 5</option>
+					<option value="DIRECTX11">DirectX 11</option>
+				</div>
+			</div>
+			<div class="tgrow">
+				<div class="tgbool" name="btest" value="false">Include tests</div>
+				<div class="tgbool" name="bsample" value="true">Include sample</div>
+			</div>
+		</div>
+		<div class="tgcmdline" name="cmakecl"></div>
+	</div>
+ -->
+
+ 	<div class="tgpanel" id="test2">
+ 		<div class="tgsnippets">
+	 		<div class="tgsnippet" label="Web">
+# https://EditorConfig.org
+
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[*.{js,py}]
+charset = utf-8
+
+# 4 space indentation
+[*.py]
+indent_style = space
+indent_size = 4
+
+# Tab indentation (no size specified)
+[Makefile]
+indent_style = tab
+
+# Indentation override for all JS under lib directory
+[lib/**.js]
+indent_style = space
+indent_size = 2
+
+# Matches the exact files either package.json or .travis.yml
+[{package.json,.travis.yml}]
+indent_style = space
+indent_size = 2
+ 			</div>
+ 		</div>
+ 	</div>
+
+</body>
+</html>
