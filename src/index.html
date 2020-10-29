@@ -15,6 +15,9 @@
 		body {
 			font-family: 'Roboto', sans-serif;
 		}
+		.page {
+			display: flex;
+		}
 		.tmenu {
 			width: fit-content;
 		}
@@ -22,6 +25,9 @@
 		}
 		#tgsrc {
 			/*visibility: hidden; display: none;*/
+		}
+		.hljs {
+			padding: 1em;
 		}
 	</style>
 </head>
@@ -44,9 +50,9 @@ $(document).ready(function() {
 		dblog('load: ' + src)
 		let desc = $('<div>').load(src, function(){
 			dblog('loaded')
-			dblog(desc)
 			let gui = desc.find('gui')	// GUI description
 			let output = $('#current')	// where to put output
+			output.empty()
 			
 			// Get on_update code and sandbox it
 			let scr = desc.find('script').text()
@@ -54,11 +60,14 @@ $(document).ready(function() {
 			let tmpcode = new Function(scr)
 			let upd = tmpcode()
 
-			tg_init(gui, output).on_update(upd)
+			let gen = tg_init(gui, output)
+			if (upd)
+				gen.on_update(upd)
 		})
 	}
 
 	include('editorconfig', "EditorConfig")
+	include('git', "Git")
 
 	$('#tglist').menu({
 		select: function(evt, ui) {
@@ -70,13 +79,15 @@ $(document).ready(function() {
 });
 </script>
 
-	<div class="tmenu">
-		<h2>Templates</h2>
-		<ul id="tglist">
-		</ul>
-	</div>
+	<div class="page">
+		<div class="tmenu">
+			<h2>Templates</h2>
+			<ul id="tglist">
+			</ul>
+		</div>
 
-	<div id="current" class="ttmpl">		
+		<div id="current" class="ttmpl">		
+		</div>
 	</div>
 
 </body>

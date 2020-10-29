@@ -1,0 +1,61 @@
+
+<teegee name="editorconfig">
+	<desc><a href="https://editorconfig.org/">Editor config</a> template.</desc>
+
+	<gui>
+		<div class="tgpanel" id="gui">
+		 	<div class="tgpanel">
+		 		<div class="tgsnippets">
+			 		<div class="tgsnippet" label=".gitattributes">
+* text=auto
+
+*.h text
+*.hpp text
+*.inl text
+*.c text
+*.cpp text
+*.txt text
+*.md text
+*.cmake text
+*.sh eol=lf
+*.bat eol=crlf
+
+*.png binary
+*.tga binary
+*.bmp binary
+*.psd binary
+*.ttf binary
+					</div>
+			 		<div class="tgsnippet" label=".gitignore">
+build*/
+
+# Text editors temporary files
+*~
+.~*
+~*
+*.swp
+Thumbs.db
+
+# End products
+*.lib
+*.dll
+*.dylib
+*.o
+*.a
+*.1
+include/ponder/version.hpp
+test/Debug
+test/Release
+		 			</div>
+		 		</div>
+		 	</div>
+		</div>
+	</gui>
+
+	<script>
+		function on_update(state) {
+		}
+	</script>
+
+</teegee>
+

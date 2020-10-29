@@ -1,7 +1,7 @@
 'use strict';
 
 function tg_copy_to_clipboard(text) {
-	let temp = $('<input>').appendTo('body')
+	let temp = $('<textarea>').appendTo('body')
     temp.val(text).select();
     document.execCommand("copy");
     temp.remove()
@@ -103,7 +103,12 @@ class UI {
 		let eHdr = $('<ul>').appendTo(eTabs)
 		tabs.forEach(function(tab, idx){
 			$(`<li><a href="#${name}-${idx}">${tab.label}</a></li>`).appendTo(eHdr)
-			$(`<div id="${name}-${idx}"><pre><code>${tab.text}</code></pre></div>`).appendTo(eTabs)
+			$(`<div id="${name}-${idx}"><pre><code>${tab.text}</code></pre>` +
+			  `<button id="tab_${name}${idx}" class="tgw-copy">Copy</button></div>`).appendTo(eTabs)
+			$(`#tab_${name}${idx}`).button().click(function(evt){
+				evt.preventDefault()
+				tg_copy_to_clipboard($(`#${name}-${idx} pre code`).text())
+			})
 		})
 		$(`#${name}`).tabs()
 	}
@@ -248,6 +253,6 @@ function tg_init(desc, output) {
 	let gen = new Gen()
 	gen.ui.cursor.push(root)
 	_tg_process(gen, desc)	
-	$('pre code').each((i,b) => hljs.highlightBlock(b));
+	$('.tgw-panel pre code').each((i,b) => hljs.highlightBlock(b));
 	return gen
 }
