@@ -56,7 +56,7 @@ $(document).ready(function() {
 			
 			// Get on_update code and sandbox it
 			let scr = desc.find('script').text()
-			scr += 'return on_update'
+			scr += 'if (typeof on_update!=="undefined") return on_update; else return null;'
 			let tmpcode = new Function(scr)
 			let upd = tmpcode()
 
