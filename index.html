@@ -5,50 +5,90 @@
 	<title>TeeGee Text Generator</title>
 	<link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/styles/github.min.css" rel="stylesheet">
 	<link href="teegee.css" rel="stylesheet">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/highlight.min.js"></script>
 	<script src="teegee.js"></script>
+	<style type="text/css">
+		body {
+			font-family: 'Roboto', sans-serif;
+		}
+		.page {
+			display: flex;
+		}
+		.tmenu {
+			width: fit-content;
+		}
+		.ttmpl {
+		}
+		#tgsrc {
+			/*visibility: hidden; display: none;*/
+		}
+		.hljs {
+			padding: 1em;
+		}
+	</style>
 </head>
 <body>
 
 <script>
 $(document).ready(function() {
 	'use strict';
+	var dblog = console.log
 
-	tg_init($('#cmakeopts')).on_update(function(state) {
-		let comp = state.get('compiler')
-		let targ = state.get('target')
-		let opts = ''
-		if (state.get('btest')) opts += ` -DWANT_TESTS=ON`
-		if (state.get('bsample')) opts += ` -DWANT_SAMPLE=ON`
-		state.set('cmakecl', `cmake -G"${comp}" -DRENDER_${targ}=ON${opts}`)
+	var gTmpls = {}
+
+	function include(filename, label) {
+		$(`<li><div>${label}</div></li>`).appendTo('#tglist')
+		gTmpls[label] = { fname: filename }
+	}
+
+	function load(info) {
+		let src = `/tg/${info.fname}.html`
+		dblog('load: ' + src)
+		let desc = $('<div>').load(src, function(){
+			dblog('loaded')
+			let gui = desc.find('gui')	// GUI description
+			let output = $('#current')	// where to put output
+			output.empty()
+			
+			// Get on_update code and sandbox it
+			let scr = desc.find('script').text()
+			scr += 'return on_update'
+			let tmpcode = new Function(scr)
+			let upd = tmpcode()
+
+			let gen = tg_init(gui, output)
+			if (upd)
+				gen.on_update(upd)
+		})
+	}
+
+	include('editorconfig', "EditorConfig")
+	include('git', "Git")
+
+	$('#tglist').menu({
+		select: function(evt, ui) {
+			let info = gTmpls[ui.item.text()]
+			load(info)
+		}
 	})
 
 });
 </script>
 
-	<div class="tgpanel" id="cmakeopts">
-		<div class="tggroup" label="Cmake options">
-			<div class="tgrow">
-				<div class="tgchoice" name="compiler" label="Choose compiler:">
-					<option value="Unix Makefiles">Makefiles</option>
-					<option>Xcode</option>
-				</div>
-				<div class="tgchoice" name="target" label="Choose target:">
-					<option value="ALLEGRO5">Allegro 5</option>
-					<option value="DIRECTX11">DirectX 11</option>
-				</div>
-			</div>
-			<div class="tgrow">
-				<div class="tgbool" name="btest" value="false">Include tests</div>
-				<div class="tgbool" name="bsample" value="true">Include sample</div>
-			</div>
+	<div class="page">
+		<div class="tmenu">
+			<h2>Templates</h2>
+			<ul id="tglist">
+			</ul>
 		</div>
-		<div class="tgcmdline" name="cmakecl"></div>
-	</div>
 
-	
+		<div id="current" class="ttmpl">		
+		</div>
+	</div>
 
 </body>
 </html>

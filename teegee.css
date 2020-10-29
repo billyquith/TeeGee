@@ -20,9 +20,9 @@ label, input { display: block; }
 .tgw-options { padding: 1em 1.5em 0 0; }
 .tgw-options label { padding-bottom: 0.5em; }
 .tgw-copy {
-	display: inline;
+/*	display: inline;
 	float: right;
-	font-size: smaller;
+*/	font-size: smaller;
 }
 .tgw-group {}
 .tgw-row {
