@@ -46,7 +46,7 @@ $(document).ready(function() {
 	}
 
 	function load(info) {
-		let src = `/tg/${info.fname}.html`
+		let src = `${location.href}tg/${info.fname}.html`
 		dblog('load: ' + src)
 		let desc = $('<div>').load(src, function(){
 			dblog('loaded')
